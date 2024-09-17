@@ -63,7 +63,7 @@ def comment(author, news):
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def all_comments(author, news):
     now = timezone.now()
     for index in range(10):
@@ -77,3 +77,10 @@ def all_comments(author, news):
 @pytest.fixture
 def id_for_args(news):
     return (news.id,)
+
+
+@pytest.fixture
+def form_data():
+    return {
+        'text': 'Новый коммент'
+    }
