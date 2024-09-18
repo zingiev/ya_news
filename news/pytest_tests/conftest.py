@@ -1,10 +1,10 @@
-from django.conf import settings
-import pytest
-
 from datetime import datetime, timedelta
 
-from django.test.client import Client
-from django.utils import timezone
+import pytest
+from django.conf import settings  # type: ignore
+from django.test.client import Client  # type: ignore
+from django.utils import timezone  # type: ignore
+from django.urls import reverse  # type: ignore
 
 from news.models import Comment, News
 
@@ -15,13 +15,13 @@ def author(django_user_model):
 
 
 @pytest.fixture
-def not_author(django_user_model):  
+def not_author(django_user_model):
     return django_user_model.objects.create(username='Не автор')
 
 
 @pytest.fixture
 def author_client(author):  # Вызываем фикстуру автора.
-    # Создаём новый экземпляр клиента, чтобы не менять глобальный.
+    """Создаём новый экземпляр клиента, чтобы не менять глобальный."""
     client = Client()
     client.force_login(author)  # Логиним автора в клиенте.
     return client
@@ -35,7 +35,7 @@ def not_author_client(not_author):
 
 
 @pytest.fixture
-def news():
+def news(author):
     return News.objects.create(title='Заголовок', text='Текст')
 
 
@@ -51,7 +51,6 @@ def all_news():
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     News.objects.bulk_create(all_news)
-    return all_news
 
 
 @pytest.fixture
@@ -75,12 +74,20 @@ def all_comments(author, news):
 
 
 @pytest.fixture
-def id_for_args(news):
-    return (news.id,)
+def home_url():
+    return reverse('news:home')
 
 
 @pytest.fixture
-def form_data():
-    return {
-        'text': 'Новый коммент'
-    }
+def news_detail_url(news):
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture
+def edit_comment_url(comment):
+    return reverse('news:edit', args=(comment.id,))
+
+
+@pytest.fixture
+def delete_comment_url(comment):
+    return reverse('news:delete', args=(comment.id,))
