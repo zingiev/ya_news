@@ -20,7 +20,7 @@ def not_author(django_user_model):
 
 
 @pytest.fixture
-def author_client(author):  # Вызываем фикстуру автора.
+def author_client(author):
     """Создаём новый экземпляр клиента, чтобы не менять глобальный."""
     client = Client()
     client.force_login(author)  # Логиним автора в клиенте.

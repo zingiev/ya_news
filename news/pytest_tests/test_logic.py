@@ -1,6 +1,5 @@
 import pytest
-from pytest_django.asserts import assertRedirects, assertFormError
-from django.urls import reverse  # type: ignore
+from pytest_django.asserts import assertFormError, assertRedirects
 
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
@@ -23,7 +22,7 @@ def test_user_can_create_comment(author_client, author, news, news_detail_url):
     response = author_client.post(news_detail_url, data=FORM_DATA)
     assertRedirects(response, f'{news_detail_url}#comments')
     assert Comment.objects.count() == comments_count + 1
-    comment = Comment.objects.get(pk=comments_count + 1)
+    comment = Comment.objects.get()
     assert comment.text == FORM_DATA['text']
     assert comment.news == news
     assert comment.author == author
@@ -45,10 +44,11 @@ def test_user_cant_user_bad_words(author_client, news_detail_url):
         (NOT_AUTHOR_CLIENT, False),
     )
 )
-def test_delete_comment(parametrized_client, comment, delete_comment):
+def test_delete_comment(
+    parametrized_client, delete_comment, delete_comment_url
+):
     comments_count = Comment.objects.count()
-    delete_url = reverse('news:delete', args=(comment.id,))
-    parametrized_client.delete(delete_url)
+    parametrized_client.delete(delete_comment_url)
     difference = comments_count - Comment.objects.count()
     assert (difference == 1) is delete_comment
 
@@ -62,11 +62,10 @@ def test_delete_comment(parametrized_client, comment, delete_comment):
     )
 )
 def test_edit_comment(
-    parametrized_client, comment, comment_in_count, news, author
+    parametrized_client, comment, comment_in_count, edit_comment_url
 ):
-    edit_url = reverse('news:edit', args=(comment.id,))
-    parametrized_client.post(edit_url, data=FORM_DATA)
+    parametrized_client.post(edit_comment_url, data=FORM_DATA)
     comment_db = Comment.objects.get(pk=comment.id)
-    assert (comment.text not in comment_db.text) is comment_in_count
-    assert comment.news == news
-    assert comment.author == author
+    assert (comment_db.text in FORM_DATA['text']) is comment_in_count
+    assert comment.news == comment_db.news
+    assert comment.author == comment_db.author
